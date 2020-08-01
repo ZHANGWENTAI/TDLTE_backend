@@ -53,6 +53,8 @@ IF EXISTS(SELECT TOP 1 * FROM sysObjects WHERE Id=OBJECT_ID(N'kpi') and xtype='U
     DROP TABLE kpi;
 IF EXISTS(SELECT TOP 1 * FROM sysObjects WHERE Id=OBJECT_ID(N'prb') and xtype='U')
     DROP TABLE prb;
+IF EXISTS(SELECT TOP 1 * FROM sysObjects WHERE Id=OBJECT_ID(N'c2inew') and xtype='U')
+    DROP TABLE c2inew;
 
 CREATE TABLE enodeb
 (
@@ -352,6 +354,16 @@ CREATE TABLE prb
     prb98 INT,
     prb99 INT,
     PRIMARY KEY(timestamp, enb_name, sector_name)
+)
+CREATE TABLE c2inew
+(
+    serving_sector NVARCHAR(50),
+	interfering_sector NVARCHAR(50),
+    mean FLOAT,
+    std FLOAT,
+    p_under9 FLOAT,
+    p_between6 FLOAT,
+    PRIMARY KEY(serving_sector, interfering_sector)
 )
 
 IF EXISTS (select * from sys.triggers where name='trig_enodeb')

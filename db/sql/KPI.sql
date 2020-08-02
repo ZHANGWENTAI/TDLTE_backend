@@ -5,7 +5,7 @@ BEGIN
 IF EXISTS(SELECT enb_name FROM inserted)
     DECLARE cur CURSOR forward_only FOR select * FROM inserted
     OPEN cur
-    DECLARE @timestamp NVARCHAR(10)
+    DECLARE @time_stamp NVARCHAR(10)
     DECLARE @enb_name NVARCHAR(50)
     DECLARE @sector_name VARCHAR(50)
     DECLARE @rrc_conn_succ_rate FLOAT
@@ -24,7 +24,7 @@ IF EXISTS(SELECT enb_name FROM inserted)
     DECLARE @enb_handout_succ INT
     DECLARE @enb_handout_req INT
     FETCH NEXT FROM cur INTO
-    @timestamp, @enb_name, @sector_name,
+    @time_stamp, @enb_name, @sector_name,
     @rrc_conn_succ_rate,
     @erab_succ_rate,
     @erab_drop_rate,
@@ -43,9 +43,9 @@ IF EXISTS(SELECT enb_name FROM inserted)
     WHILE(@@FETCH_STATUS=0)
     BEGIN
         --增加操作
-    IF ((SELECT COUNT (*) FROM kpi WHERE enb_name=@enb_name AND timestamp=@timestamp AND sector_name=@sector_name)<1)
+    IF ((SELECT COUNT (*) FROM kpi WHERE enb_name=@enb_name AND time_stamp=@time_stamp AND sector_name=@sector_name)<1)
     BEGIN
-        INSERT INTO kpi VALUES (@timestamp, @enb_name, @sector_name,
+        INSERT INTO kpi VALUES (@time_stamp, @enb_name, @sector_name,
         @rrc_conn_succ_rate,
         @erab_succ_rate,
         @erab_drop_rate,
@@ -80,9 +80,9 @@ IF EXISTS(SELECT enb_name FROM inserted)
             rrc_rebuild=@rrc_rebuild,
             enb_handout_succ=@enb_handout_succ,
             enb_handout_req=@enb_handout_req
-            WHERE enb_name=@enb_name AND timestamp=@timestamp AND sector_name=@sector_name
+            WHERE enb_name=@enb_name AND time_stamp=@time_stamp AND sector_name=@sector_name
         END
-        FETCH NEXT FROM cur INTO  @enb_name, @timestamp, @sector_name,
+        FETCH NEXT FROM cur INTO  @enb_name, @time_stamp, @sector_name,
         @rrc_conn_succ_rate,
         @erab_succ_rate,
         @erab_drop_rate,

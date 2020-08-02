@@ -16,6 +16,17 @@ def initdb():
     initDB()
     click.echo('\nInitialized database.\n')
 
+@app.cli.command()
+def dbg():
+    code, msg, res = handle_prb_query(connection.cursor(),
+                                    '三门峡连霍义马高速东-HLHF-1',
+                                    '07/17/2016 00:00:00',
+                                    '07/19/2016 00:00:00',
+                                    1, 'prb60')
+    print(msg)
+    print(res)
+    click.echo('\nOK.\n')
+
 @app.route('/register', methods=['POST'])
 def register():
     c = connection.cursor()
@@ -107,20 +118,20 @@ def enodeb():
         data=info,
     )
 
-@app.route('/kpi', methods=['GET'])
-def kpi():
-    cell_name = request.args.get('cell_name')
-    start_time = request.args.get('from')
-    end_time = request.args.get('to')
-    props = request.args.get('props')
-
-    code, msg, info = handle_kpi_query(cell_name, start_time, end_time, props)
-
-    return jsonify(
-        status=code,
-        message=msg,
-        data=info,
-    )
+# @app.route('/kpi', methods=['GET'])
+# def kpi():
+#     cell_name = request.args.get('cell_name')
+#     start_time = request.args.get('from')
+#     end_time = request.args.get('to')
+#     props = request.args.get('props')
+#
+#     code, msg, info = handle_kpi_query(cell_name, start_time, end_time, props)
+#
+#     return jsonify(
+#         status=code,
+#         message=msg,
+#         data=info,
+#     )
 
 @app.route('/prb_stat', methods=['POST'])
 def prb_stat():

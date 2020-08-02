@@ -11,7 +11,7 @@ class Cell:
         sectorID = ""
         sectorName = ""
         eNodeBID = 0
-        eNodeName = ""
+        eNodeBName = ""
         earfcn = 0
         pci = 0
         pss = 0
@@ -66,7 +66,7 @@ class Cell:
                 sectorID = dataList[1]
                 sectorName = dataList[2]
                 eNodeBID = dataList[3]
-                eNodeName = dataList[4]
+                eNodeBName = dataList[4]
                 earfcn = dataList[5]
                 pci = dataList[6]
                 pss = dataList[7]
@@ -89,7 +89,7 @@ class Cell:
                     mechtilt = 4
                 if totletilt == '':
                     totletilt = 7
-                tempSqlItem = (city, sectorID, sectorName, eNodeBID, eNodeName,
+                tempSqlItem = (city, sectorID, sectorName, eNodeBID, eNodeBName,
                     earfcn, pci, pss, sss, tac, azimuth, height,
                     electtilt, mechtilt, totletilt)
                 if _isOK(tempSqlItem):

@@ -5,7 +5,7 @@ BEGIN
 IF EXISTS(SELECT enb_name FROM inserted)  --插入和更新
     DECLARE cur CURSOR forward_only FOR SELECT * FROM inserted
     OPEN cur
-    DECLARE @timestamp VARCHAR(20)
+    DECLARE @time_stamp VARCHAR(50)
     DECLARE @enb_name NVARCHAR(50)
     DECLARE @sector_name NVARCHAR(50)
     DECLARE @prb0 INT
@@ -109,7 +109,7 @@ IF EXISTS(SELECT enb_name FROM inserted)  --插入和更新
     DECLARE @prb98 INT
     DECLARE @prb99 INT
     FETCH NEXT FROM cur INTO
-    @timestamp,
+    @time_stamp,
     @enb_name,
     @sector_name,
     @prb0,
@@ -214,9 +214,9 @@ IF EXISTS(SELECT enb_name FROM inserted)  --插入和更新
     @prb99
     BEGIN
         --增加操作
-    IF ((SELECT COUNT (*) FROM prb WHERE enb_name=@enb_name AND timestamp=@timestamp AND sector_name=@sector_name)<1)
+    IF ((SELECT COUNT (*) FROM prb WHERE enb_name=@enb_name AND time_stamp=@time_stamp AND sector_name=@sector_name)<1)
     BEGIN
-        INSERT INTO prb VALUES (@timestamp, @enb_name, @sector_name,
+        INSERT INTO prb VALUES (@time_stamp, @enb_name, @sector_name,
         @prb0,
         @prb1,
         @prb2,
@@ -421,9 +421,9 @@ IF EXISTS(SELECT enb_name FROM inserted)  --插入和更新
         prb97=@prb97,
         prb98=@prb98,
         prb99=@prb99
-        WHERE enb_name=@enb_name AND timestamp=@timestamp AND sector_name=@sector_name
+        WHERE enb_name=@enb_name AND time_stamp=@time_stamp AND sector_name=@sector_name
     END
-    FETCH NEXT FROM cur INTO  @enb_name, @timestamp, @sector_name,
+    FETCH NEXT FROM cur INTO  @enb_name, @time_stamp, @sector_name,
         @prb0,
         @prb1,
         @prb2,

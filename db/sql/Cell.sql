@@ -4,7 +4,7 @@ AS
 BEGIN
 IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
     DECLARE cur CURSOR forward_only
-    FOR SELECT city, sector_id, sector_name, enodebid, enode_name,
+    FOR SELECT city, sector_id, sector_name, enodebid, enodeb_name,
     earfcn, pci, pss, sss, tac, azimuth, height,
     electtilt, mechtilt, totletilt FROM inserted
     OPEN cur  --打开游标
@@ -12,7 +12,7 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
     DECLARE @sector_id NVARCHAR(255)
     DECLARE @sector_name NVARCHAR(255)
     DECLARE @enodebid INT
-    DECLARE @enode_name NVARCHAR(255)
+    DECLARE @enodeb_name NVARCHAR(255)
     DECLARE @earfcn INT
     DECLARE @pci INT
     DECLARE @pss INT
@@ -23,7 +23,7 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
     DECLARE @electtilt FLOAT
     DECLARE @mechtilt FLOAT
     DECLARE @totletilt FLOAT
-    FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodebid, @enode_name,
+    FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodebid, @enodeb_name,
     @earfcn, @pci, @pss, @sss, @tac, @azimuth, @height, @electtilt, @mechtilt, @totletilt
     WHILE(@@FETCH_STATUS=0)
     BEGIN
@@ -33,7 +33,7 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
             IF ((SELECT COUNT (*) FROM enodeb WHERE enodebid=@enodebid)>=1)
             BEGIN
                 INSERT INTO cell VALUES (@city, @sector_id, @sector_name,
-                @enodebid, @enode_name,@earfcn, @pci, @pss, @sss, @tac,
+                @enodebid, @enodeb_name,@earfcn, @pci, @pss, @sss, @tac,
                 @azimuth, @height, @electtilt, @mechtilt, @totletilt)
             END
         END
@@ -43,7 +43,7 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
             city=@city,
             sector_name=@sector_name,
             enodebid=@enodebid,
-            enode_name=@enode_name,
+            enodeb_name=@enodeb_name,
             earfcn=@earfcn,
             pci=@pci,
             pss=@pss,
@@ -56,7 +56,7 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
             totletilt=@totletilt
             WHERE sector_id=@sector_id
         END
-        FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodebid, @enode_name,
+        FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodebid, @enodeb_name,
         @earfcn, @pci, @pss, @sss, @tac, @azimuth, @height,
         @electtilt, @mechtilt, @totletilt   --指向下一条
     END

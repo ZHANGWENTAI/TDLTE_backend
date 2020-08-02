@@ -228,7 +228,7 @@ CREATE TABLE users
 )
 CREATE TABLE kpi
 (
-    timestamp VARCHAR(10),
+    time_stamp VARCHAR(50),
     enb_name NVARCHAR(50),
     sector_name NVARCHAR(50),
     rrc_conn_succ_rate FLOAT,
@@ -250,7 +250,7 @@ CREATE TABLE kpi
 )
 CREATE TABLE prb
 (
-    timestamp VARCHAR(20),
+    time_stamp VARCHAR(20),
     enb_name NVARCHAR(50),
     sector_name NVARCHAR(50),
     prb0 INT,

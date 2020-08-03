@@ -4,14 +4,14 @@ AS
 BEGIN
 IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
     DECLARE cur CURSOR forward_only
-    FOR SELECT city, sector_id, sector_name, enodebid, enodeb_name,
+    FOR SELECT city, sector_id, sector_name, enodeb_id, enodeb_name,
     earfcn, pci, pss, sss, tac, azimuth, height,
     electtilt, mechtilt, totletilt FROM inserted
     OPEN cur  --打开游标
     DECLARE @city NVARCHAR(255)
     DECLARE @sector_id NVARCHAR(255)
     DECLARE @sector_name NVARCHAR(255)
-    DECLARE @enodebid INT
+    DECLARE @enodeb_id INT
     DECLARE @enodeb_name NVARCHAR(255)
     DECLARE @earfcn INT
     DECLARE @pci INT
@@ -23,17 +23,17 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
     DECLARE @electtilt FLOAT
     DECLARE @mechtilt FLOAT
     DECLARE @totletilt FLOAT
-    FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodebid, @enodeb_name,
+    FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodeb_id, @enodeb_name,
     @earfcn, @pci, @pss, @sss, @tac, @azimuth, @height, @electtilt, @mechtilt, @totletilt
     WHILE(@@FETCH_STATUS=0)
     BEGIN
         --增加操作
         IF ((SELECT COUNT (*) FROM cell WHERE sector_id=@sector_id)<1)
         BEGIN
-            IF ((SELECT COUNT (*) FROM enodeb WHERE enodebid=@enodebid)>=1)
+            IF ((SELECT COUNT (*) FROM enodeb WHERE enodeb_id=@enodeb_id)>=1)
             BEGIN
                 INSERT INTO cell VALUES (@city, @sector_id, @sector_name,
-                @enodebid, @enodeb_name,@earfcn, @pci, @pss, @sss, @tac,
+                @enodeb_id, @enodeb_name,@earfcn, @pci, @pss, @sss, @tac,
                 @azimuth, @height, @electtilt, @mechtilt, @totletilt)
             END
         END
@@ -42,7 +42,7 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
             UPDATE cell SET
             city=@city,
             sector_name=@sector_name,
-            enodebid=@enodebid,
+            enodeb_id=@enodeb_id,
             enodeb_name=@enodeb_name,
             earfcn=@earfcn,
             pci=@pci,
@@ -56,7 +56,7 @@ IF EXISTS(SELECT sector_id FROM inserted)  --插入和更新
             totletilt=@totletilt
             WHERE sector_id=@sector_id
         END
-        FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodebid, @enodeb_name,
+        FETCH NEXT FROM cur INTO @city, @sector_id, @sector_name, @enodeb_id, @enodeb_name,
         @earfcn, @pci, @pss, @sss, @tac, @azimuth, @height,
         @electtilt, @mechtilt, @totletilt   --指向下一条
     END

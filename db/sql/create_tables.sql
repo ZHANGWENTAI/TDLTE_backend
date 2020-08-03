@@ -59,7 +59,7 @@ IF EXISTS(SELECT TOP 1 * FROM sysObjects WHERE Id=OBJECT_ID(N'c2inew') and xtype
 CREATE TABLE enodeb
 (
 	city NVARCHAR(255) NULL,
-	enodebid INT PRIMARY KEY,
+	enodeb_id INT PRIMARY KEY,
 	enodeb_name NVARCHAR(255) NOT NULL,
 	vendor NVARCHAR(255),
 	longitude FLOAT NOT NULL,
@@ -73,8 +73,8 @@ CREATE TABLE cell
 	city NVARCHAR(255) NULL,
 	sector_id NVARCHAR(255) PRIMARY KEY,
 	sector_name NVARCHAR(255) NOT NULL,
-	enodebid INT,
-	enode_name NVARCHAR(255) NOT NULL,
+	enodeb_id INT,
+	enodeb_name NVARCHAR(255) NOT NULL,
 	earfcn INT NOT NULL,
 	pci INT NOT NULL,
 	pss INT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE cell
 	electtilt FLOAT,
 	mechtilt FLOAT,
 	totletilt FLOAT NOT NULL,
-	CONSTRAINT fk_cell_enodeb_1 FOREIGN KEY (enodebid) REFERENCES enodeb(enodebid),
+	CONSTRAINT fk_cell_enodeb_1 FOREIGN KEY (enodeb_id) REFERENCES enodeb(enodeb_id),
 	CONSTRAINT chk_cell_pci CHECK(pci BETWEEN 0 AND 503),
 	CONSTRAINT chk_cell_earfcn CHECK(earfcn=37900 OR earfcn=38098 OR earfcn=38400 OR earfcn=38544 OR earfcn=38496 OR earfcn=38950 OR earfcn=39148),
 	CONSTRAINT chk_cell_pss CHECK(pss=0 OR pss=1 OR pss=2 OR pss=NULL),
@@ -246,7 +246,7 @@ CREATE TABLE kpi
     rrc_rebuild FLOAT,
     enb_handout_succ INT,
     enb_handout_req INT,
-    PRIMARY KEY(enb_name, timestamp, sector_name)
+    PRIMARY KEY(enb_name, time_stamp, sector_name)
 )
 CREATE TABLE prb
 (
@@ -353,7 +353,7 @@ CREATE TABLE prb
     prb97 INT,
     prb98 INT,
     prb99 INT,
-    PRIMARY KEY(timestamp, enb_name, sector_name)
+    PRIMARY KEY(time_stamp, enb_name, sector_name)
 )
 CREATE TABLE c2inew
 (

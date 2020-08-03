@@ -2,11 +2,6 @@ from db.Tables.ENodeB import ENodeB
 from db.Tables.KPI import KPI
 from db.Tables.PRB import PRB
 from db.Tables.MROData import MROData
-import pyodbc as odbc
-import pandas as pd
-from sqlalchemy import create_engine
-from scipy.stats import norm
-
 
 def handle_register(account, authentication, cursor):
     cursor.execute('SELECT account FROM users WHERE account=?', account)
@@ -17,7 +12,6 @@ def handle_register(account, authentication, cursor):
         cursor.execute('INSERT INTO users VALUES(?, ?)', account, authentication)
         cursor.commit()
         return True
-
 
 def handle_login(account, authentication, cursor):
     cursor.execute('SELECT authentication FROM users WHERE account=?', account)
@@ -30,13 +24,11 @@ def handle_login(account, authentication, cursor):
     else:
         return 0, 'login successfully'
 
-
 def handle_config(path, cursor):
     enodeb = ENodeB()
     code, msg = enodeb.loadData(cursor, 1000, path)
 
     return code, msg
-
 
 def handle_kpi(path, cursor):
     kpi = KPI()
@@ -44,20 +36,17 @@ def handle_kpi(path, cursor):
 
     return code, msg
 
-
 def handle_prb(path, cursor):
     prb = PRB()
     code, msg = prb.loadFromExcel(cursor, 5000, path)
 
     return code, msg
 
-
 def handle_mro(path, cursor):
     mro = MROData()
     code, msg = mro.loadData(cursor, 5000, path)
 
     return code, msg
-
 
 def handle_export(tb_name, format, path):
     import pandas as pd
@@ -73,8 +62,10 @@ def handle_export(tb_name, format, path):
 
     return 0, ""
 
-
-def handle_overlay_analysis():
+def handle_c2i_analysis():
+    import pandas as pd
+    from sqlalchemy import create_engine
+    from scipy.stats import norm
 
     con = create_engine("mssql+pyodbc://zwt:240017@TDLTE")
     df = pd.read_sql("""
@@ -86,12 +77,57 @@ def handle_overlay_analysis():
     df['p_under9'] = norm.cdf((9 - df['mean']) / df['std'])
     df['p_between6'] = norm.cdf((6 - df['mean']) / df['std']) - norm.cdf((-6 - df['mean']) / df['std'])
 
-    df.to_sql('c2inew3', con)
-
+    df.to_sql('c2inew', con, if_exists='replace')
     return 0, ""
 
+def drop_duplication(data):
+    drop_set = set()
+    for i in range(data.shape[0] - 1):
+        if i in drop_set:
+            continue
 
-def handle_cell(c, cell_id=None, cell_name=None):
+        sector1 = data.at[i, 'ss']
+        sector2 = data.at[i, 'ins']
+        for j in range(i, data.shape[0]):
+            if data.at[j, 'ss'] == sector2 and data.at[j, 'ins'] == sector1:
+                drop_set.add(j)
+
+    data.drop(index=list(drop_set))
+    return data
+
+def handle_overlay_analysis(x):
+    import pandas as pd
+    from sqlalchemy import create_engine
+
+    con = create_engine("mssql+pyodbc://zwt:240017@TDLTE")
+    script = "SELECT serving_sector as ss, interfering_sector as ins FROM c2inew WHERE p_between6 > " + str(x / 100)
+    df = pd.read_sql(script, con)
+    df = drop_duplication(df)
+
+    result = pd.DataFrame(columns=['sector1', 'sector2', 'sector3'])
+
+    for i in range(df.shape[0] - 1):
+        sector1 = df.at[i, 'ss']
+        sector2 = df.at[i, 'ins']
+
+        ss_set = set()
+        ins_set = set()
+        for j in range(i, df.shape[0]):
+            if df.at[j, 'ss'] == sector1 and df.at[j, 'ins'] != sector2:
+                ss_set.add(df.at[j, 'ins'])
+            elif df.at[j, 'ss'] != sector1 and df.at[j, 'ins'] == sector2:
+                ins_set.add(df.at[j, 'ss'])
+
+        third = ss_set.intersection(ins_set)
+        for sector3 in third:
+            result = result.append({'sector1': sector1, 'sector2': sector2, 'sector3': sector3}, ignore_index=True)
+
+    result.to_sql('c2i3', con, if_exists='replace', index=False)
+    print(result.to_dict())
+    return 0, "", result.to_dict()
+
+
+def handle_cell(cell_id=None, cell_name=None):
     """
     :param cell_id:
     :param cell_name:
@@ -99,116 +135,16 @@ def handle_cell(c, cell_id=None, cell_name=None):
              msg: error message, if success, ""
              info: tuple or dict of query result
     """
-    res = []
-    if cell_id is not None:
-        script = """SELECT * FROM cell WHERE sector_id = '{0}'""".format(cell_id)
-    else:
-        if cell_name is not None:
-            script = """SELECT * FROM cell WHERE sector_name = '{0}'""".format(cell_name)
-        else:
-            return 1, "Both cell_id and cell_name are None", res
-    try:
-        c.execute(script)
-    except odbc.DatabaseError as err:
-        print(err)
-    row = c.fetchone()
-    while row:
-        res.append(row)
-        row = c.fetchone()
-    return 0, "", res
+    pass
 
+def handle_enodeb(enodeb_id=None, enodeb_name=None):
+    pass
 
-def handle_enodeb(c, enodeb_id=None, enodeb_name=None):
-    res = []
-    if enodeb_id is not None:
-        script = """SELECT * FROM cell WHERE enodebid = '{0}'""".format(enodeb_id)
-    else:
-        if enodeb_name is not None:
-            script = """SELECT * FROM cell WHERE enodeb_name = '{0}'""".format(enodeb_name)
-        else:
-            return 1, "Both enodeb_id and enodeb_name are None", res
-    try:
-        c.execute(script)
-    except odbc.DatabaseError as err:
-        print(err)
-    row = c.fetchone()
-    while row:
-        res.append(row)
-        row = c.fetchone()
-    return 0, "", res
+def handle_kpi_query(cell_name, start_time, end_time, props):
+    pass
 
+def handle_prb_stat(src_path, dst_path):
+    pass
 
-def handle_kpi_query(c, cell_name, start_time, end_time, props):
-    res = []
-    msg = "No result! Check whether the data is imported."
-    script = """
-    SELECT time_stamp, {0} 
-    FROM kpi 
-    WHERE sector_name = '{1}' 
-    AND time_stamp BETWEEN '{2}' AND '{3}'
-    """.format(props, cell_name, start_time, end_time)
-    print(script)
-    try:
-        c.execute(script)
-    except odbc.DatabaseError as err:
-        print(err)
-    row = c.fetchone()
-    while row:
-        msg = ""
-        res.append(row)
-        row = c.fetchone()
-    return 0, msg, res
-
-
-def handle_prb_stat(dst_path):
-    con = create_engine("mssql+pyodbc://sa:67258012@sbq")
-    script = """
-            SELECT enb_name,sector_name
-            ,dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0) as [time_stamp]"""
-    script2 = """
-            from prb
-            group by enb_name,sector_name,dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0)
-            order by dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0)
-            """
-    for i in range(100):
-        script += """
-            ,AVG( convert(int,prb{0})) as prb{1}""".format(i, i)
-    script += script2
-    print(script)
-    df = pd.read_sql(script, con)
-    df.to_sql('prbnew', con)
-    df.to_excel(dst_path + '/' + 'PRBnew.xlsx')
-    return 0, ""
-
-
-def handle_prb_query(c, cell_name, start_time, end_time, granularity, prb_no):
-    """
-    :param granularity: if by minutes 0, else 1
-    :param prb_no:
-    :return: code: if success 0, else 1
-             msg: error message, if success, ""
-             info: tuple or dict of query result
-    """
-    res = []
-    msg = "No result! Check whether the data is imported."
-    if granularity == 0:
-        table_name = 'prb'
-    else:
-        table_name = 'prbnew'
-    script = """
-        SELECT time_stamp, {0} 
-        FROM {1} 
-        WHERE sector_name = '{2}' 
-        AND time_stamp BETWEEN '{3}' AND '{4}'
-        """.format(prb_no, table_name, cell_name, start_time, end_time)
-    try:
-        c.execute(script)
-    except odbc.DatabaseError as err:
-        print(err)
-    row = c.fetchone()
-    while row:
-        msg = ""
-        res.append(row)
-        row = c.fetchone()
-    return 0, msg, res
-
+def handle_prb_query(cell_name, start_time, end_time, props):
+    pass

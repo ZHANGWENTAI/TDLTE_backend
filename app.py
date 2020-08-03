@@ -16,17 +16,6 @@ def initdb():
     initDB()
     click.echo('\nInitialized database.\n')
 
-@app.cli.command()
-def dbg():
-    code, msg, res = handle_prb_query(connection.cursor(),
-                                    '三门峡连霍义马高速东-HLHF-1',
-                                    '07/17/2016 00:00:00',
-                                    '07/19/2016 00:00:00',
-                                    1, 'prb60')
-    print(msg)
-    print(res)
-    click.echo('\nOK.\n')
-
 @app.route('/register', methods=['POST'])
 def register():
     c = connection.cursor()
@@ -94,30 +83,30 @@ def mro():
         message=msg
     )
 
-@app.route('/cell', methods=['GET'])
-def cell():
-    cell_id = request.args.get('cell_id')
-    cell_name = request.args.get('cell_name')
-
-    code, msg, info = handle_cell(cell_id, cell_name)
-    return jsonify(
-        status=code,
-        message=msg,
-        data=info,
-    )
-
-@app.route('/enodeb', methods=['GET'])
-def enodeb():
-    enodeb_id = request.args.get('enodeb_id')
-    enodeb_name = request.args.get('enodeb_name')
-
-    code, msg, info = handle_enodeb(enodeb_id, enodeb_name)
-    return jsonify(
-        status=code,
-        message=msg,
-        data=info,
-    )
-
+# @app.route('/cell', methods=['GET'])
+# def cell():
+#     cell_id = request.args.get('cell_id')
+#     cell_name = request.args.get('cell_name')
+#
+#     code, msg, info = handle_cell(cell_id, cell_name)
+#     return jsonify(
+#         status=code,
+#         message=msg,
+#         data=info,
+#     )
+#
+# @app.route('/enodeb', methods=['GET'])
+# def enodeb():
+#     enodeb_id = request.args.get('enodeb_id')
+#     enodeb_name = request.args.get('enodeb_name')
+#
+#     code, msg, info = handle_enodeb(enodeb_id, enodeb_name)
+#     return jsonify(
+#         status=code,
+#         message=msg,
+#         data=info,
+#     )
+#
 # @app.route('/kpi', methods=['GET'])
 # def kpi():
 #     cell_name = request.args.get('cell_name')
@@ -132,46 +121,56 @@ def enodeb():
 #         message=msg,
 #         data=info,
 #     )
+#
+# @app.route('/prb_stat', methods=['POST'])
+# def prb_stat():
+#     code, msg, info = handle_prb_stat(request.json['src_path'], request.json['dst_path'])
+#
+#     return jsonify(
+#         status=code,
+#         message=msg,
+#         data=info,
+#     )
+#
+# @app.route('/prb_query', methods=['GET'])
+# def prb_query():
+#     cell_name = request.args.get('cell_name')
+#     start_time = request.args.get('from')
+#     end_time = request.args.get('to')
+#     props = request.args.get('props')
+#
+#     code, msg, info = handle_prb_query(cell_name, start_time, end_time, props)
+#
+#     return jsonify(
+#         status=code,
+#         message=msg,
+#         data=info,
+#     )
+#
+# @app.route('/export', methods=['POST'])
+# def export():
+#     code, msg = handle_export(request.json['tb_name'], request.json['format'], request.json['path'])
+#
+#     return jsonify(
+#         status=code,
+#         message=msg
+#     )
 
-@app.route('/prb_stat', methods=['POST'])
-def prb_stat():
-    code, msg, info = handle_prb_stat(request.json['src_path'], request.json['dst_path'])
-
-    return jsonify(
-        status=code,
-        message=msg,
-        data=info,
-    )
-
-@app.route('/prb_query', methods=['GET'])
-def prb_query():
-    cell_name = request.args.get('cell_name')
-    start_time = request.args.get('from')
-    end_time = request.args.get('to')
-    props = request.args.get('props')
-
-    code, msg, info = handle_prb_query(cell_name, start_time, end_time, props)
-
-    return jsonify(
-        status=code,
-        message=msg,
-        data=info,
-    )
-
-@app.route('/export', methods=['POST'])
-def export():
-    code, msg = handle_export(request.json['tb_name'], request.json['format'], request.json['path'])
+@app.route('/c2i_analysis', methods=['GET'])
+def c2i_analysis():
+    code, msg = handle_c2i_analysis()
 
     return jsonify(
         status=code,
         message=msg
     )
 
-@app.route('/overlay', methods=['GET'])
-def overlay():
-    code, msg = handle_overlay_analysis()
+@app.route('/overlay_analysis', methods=['POST'])
+def overlay_analysis():
+    code, msg, triple = handle_overlay_analysis(request.json['x'])
 
     return jsonify(
         status=code,
-        message=msg
+        message=msg,
+        info=triple
     )

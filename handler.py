@@ -62,7 +62,7 @@ def handle_export(tb_name, format, path):
 
     return 0, ""
 
-def handle_overlay_analysis():
+def handle_c2i_analysis():
     import pandas as pd
     from sqlalchemy import create_engine
     from scipy.stats import norm
@@ -77,9 +77,55 @@ def handle_overlay_analysis():
     df['p_under9'] = norm.cdf((9 - df['mean']) / df['std'])
     df['p_between6'] = norm.cdf((6 - df['mean']) / df['std']) - norm.cdf((-6 - df['mean']) / df['std'])
 
-    df.to_sql('c2inew3', con)
-
+    df.to_sql('c2inew', con, if_exists='replace')
     return 0, ""
+
+def drop_duplication(data):
+    drop_set = set()
+    for i in range(data.shape[0] - 1):
+        if i in drop_set:
+            continue
+
+        sector1 = data.at[i, 'ss']
+        sector2 = data.at[i, 'ins']
+        for j in range(i, data.shape[0]):
+            if data.at[j, 'ss'] == sector2 and data.at[j, 'ins'] == sector1:
+                drop_set.add(j)
+
+    data.drop(index=list(drop_set))
+    return data
+
+def handle_overlay_analysis(x):
+    import pandas as pd
+    from sqlalchemy import create_engine
+
+    con = create_engine("mssql+pyodbc://zwt:240017@TDLTE")
+    script = "SELECT serving_sector as ss, interfering_sector as ins FROM c2inew WHERE p_between6 > " + str(x / 100)
+    df = pd.read_sql(script, con)
+    df = drop_duplication(df)
+
+    result = pd.DataFrame(columns=['sector1', 'sector2', 'sector3'])
+
+    for i in range(df.shape[0] - 1):
+        sector1 = df.at[i, 'ss']
+        sector2 = df.at[i, 'ins']
+
+        ss_set = set()
+        ins_set = set()
+        for j in range(i, df.shape[0]):
+            if df.at[j, 'ss'] == sector1 and df.at[j, 'ins'] != sector2:
+                ss_set.add(df.at[j, 'ins'])
+            elif df.at[j, 'ss'] != sector1 and df.at[j, 'ins'] == sector2:
+                ins_set.add(df.at[j, 'ss'])
+
+        third = ss_set.intersection(ins_set)
+        for sector3 in third:
+            result = result.append({'sector1': sector1, 'sector2': sector2, 'sector3': sector3}, ignore_index=True)
+
+    result.to_sql('c2i3', con, if_exists='replace', index=False)
+    print(result.to_dict())
+    return 0, "", result.to_dict()
+
 
 def handle_cell(cell_id=None, cell_name=None):
     """

@@ -1,9 +1,10 @@
 # -*- coding utf-8 -*-
 import click
+import time
 import pyodbc as odbc
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from db.initDB import initDB
+from db.initDB import initDB, initIndex
 from handler import *
 
 app = Flask(__name__)
@@ -14,18 +15,20 @@ connection = odbc.connect('DRIVER={SQL Server};SERVER=localhost;DATABASE=TDLTE')
 @app.cli.command()
 def initdb():
     initDB()
+    initIndex()
     click.echo('\nInitialized database.\n')
 
 @app.cli.command()
 def dbg():
 
-    code, msg, res = handle_prb_query(connection.cursor(),
-                                    '三门峡连霍义马高速东-HLHF-1',
-                                    '07/17/2016 00:00:00',
-                                    '07/19/2016 00:00:00',
-                                    1, 'prb60')
-    print(msg)
-    print(res)
+    start1 = time.clock()
+    handle_enodeb(enodeb_id='273991')
+    end1 = time.clock()
+    initIndex()
+    start2 = time.clock()
+    handle_enodeb(enodeb_id='273991')
+    end2 = time.clock()
+    print("无索引：", end1 - start1, "有索引：", end2 - start2)
     click.echo('\nOK.\n')
 
 @app.route('/register', methods=['POST'])

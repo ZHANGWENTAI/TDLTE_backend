@@ -48,6 +48,17 @@ def initDB():
     mycursor.close()
     cnxn.close()
 
+def initIndex():
+    cnxn = odbc.connect('DRIVER={SQL Server};SERVER=localhost;DATABASE=TDLTE')
+
+    mycursor = cnxn.cursor()  # 建立游标
+    mycursor.fast_executemany = True
+    cell = Cell()
+    cell.createIndex(mycursor)
+
+    mycursor.close()
+    cnxn.close()
+
 # 打印查询结果
 def printTable(c, tableName):
     print("-----------------------")

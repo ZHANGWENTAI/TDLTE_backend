@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from scipy.stats import norm
 
-con = create_engine("mssql+pyodbc://zwt:240017@TDLTE")
+con = create_engine("mssql+pyodbc://sa:67258012@sbq")
 
 def handle_register(account, authentication, cursor):
     cursor.execute('SELECT account FROM users WHERE account=?', account)
@@ -129,7 +129,7 @@ def handle_cell(sector_id=None, sector_name=None):
     """
     res = {}
     if sector_id is not None:
-        script = """SELECT * FROM cell WHERE sector_id = '{0}'""".format(sector_id)
+        script = """SELECT * FROM cell WHERE sectorid = '{0}'""".format(sector_id)
     elif sector_name is not None:
         script = """SELECT * FROM cell WHERE sector_name = '{0}'""".format(sector_name)
     else:
@@ -144,7 +144,7 @@ def handle_cell(sector_id=None, sector_name=None):
 def handle_enodeb(enodeb_id=None, enodeb_name=None):
     res = {}
     if enodeb_id is not None:
-        script = """SELECT * FROM cell WHERE enodeb_id = '{0}'""".format(enodeb_id)
+        script = """SELECT * FROM cell WHERE enodebid = '{0}'""".format(enodeb_id)
     elif enodeb_name is not None:
         script = """SELECT * FROM cell WHERE enodeb_name = '{0}'""".format(enodeb_name)
     else:

@@ -6,6 +6,11 @@ class Cell:
             cursor.execute(script.read())
             cursor.commit()
 
+    def createIndex(self, cursor):
+        with open(os.getcwd() + r'\db\sql\CellIndex.sql', encoding='utf-8') as script:
+            cursor.execute(script.read())
+            cursor.commit()
+
     def loadData(self, cursor, size, filePath):
         city = ""
         sectorID = ""

@@ -7,16 +7,9 @@ import pandas as pd
 import os
 from sqlalchemy import create_engine
 from scipy.stats import norm
+import processbar
 
 con = create_engine("mssql+pyodbc://zwt:240017@TDLTE")
-total_tbcell_rows = 5505
-current_tbcell_rows = 0
-total_tbkpi_rows = 970
-current_tbkpi_rows = 0
-total_tbprb_rows = 93025
-current_tbprb_rows = 0
-total_tbmro_rows = 875605
-current_tbmro_rows = 0
 
 def handle_register(account, authentication, cursor):
     cursor.execute('SELECT account FROM users WHERE account=?', account)
@@ -42,7 +35,7 @@ def handle_login(account, authentication, cursor):
 def handle_config(path, cursor):
     enodeb = ENodeB()
     code, msg = enodeb.loadData(cursor, 1000, path)
-
+    # print(processbar.row)
     return code, msg
 
 def handle_kpi(path, cursor):
@@ -53,7 +46,7 @@ def handle_kpi(path, cursor):
 
 def handle_prb(path, cursor):
     prb = PRB()
-    code, msg = prb.loadFromExcel(cursor, 5000, path)
+    code, msg = prb.loadFromExcel(cursor, 500, path)
 
     script = """
                     SELECT enb_name,sector_name

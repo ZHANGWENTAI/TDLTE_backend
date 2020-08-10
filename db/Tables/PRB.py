@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import processbar
 
 class PRB:
     def createTrig(self, cursor):
@@ -9,6 +10,7 @@ class PRB:
 
     def loadFromExcel(self, cursor, size, filePath):
         cnt = 1
+        processbar.row = 0
         while True:
             df = pd.read_excel(filePath,
                                header=None,
@@ -37,10 +39,9 @@ class PRB:
 
                 cursor.executemany(script, df.values.tolist())
                 cursor.commit()
-                if df.shape[0] < size:
-                    break
-                else:
-                    cnt += size
+
+                cnt += size
+                processbar.row = cnt
 
         print("prb finished!")
         return 0, ""

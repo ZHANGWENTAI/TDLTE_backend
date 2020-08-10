@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import processbar
 
 class ENodeB:
     def createTrig(self, cursor):
@@ -11,6 +12,7 @@ class ENodeB:
     def loadData(self, cursor, size, filePath):
         if os.path.splitext(filePath)[-1] in ['.xlsx', '.xls', '.xlsx/', '.xls/']:
             cnt = 0
+            processbar.row = 0
             while True:
                 df = pd.read_excel(filePath,
                                    header=None,
@@ -29,14 +31,12 @@ class ENodeB:
                     script = 'INSERT INTO enodeb VALUES(?,?,?,?,?,?,?)'
                     cursor.executemany(script, df.values.tolist())
                     cursor.commit()
-                    if df.shape[0] < size:
-                        print("enodeb finished!")
-                        break
-                    else:
-                        cnt += size
+                    cnt += size
+                    processbar.row = cnt
 
             return 0, ""
         elif os.path.splitext(filePath)[-1] in ['.csv', '.csv/']:
+            processbar.row = 0
             for df in pd.read_csv(filePath,
                                   encoding='gb2312',
                                   chunksize=size,
@@ -45,6 +45,7 @@ class ENodeB:
                 if df.shape[0] == 0:
                     break
                 # wash data
+                processbar.row += size
                 df = df.loc[df['vendor'].isin(["华为", "中兴", "诺西", "爱立信", "贝尔", "大唐"])
                             & df['style'].isin(["宏站", "室分", "室外"])]
                 # insert

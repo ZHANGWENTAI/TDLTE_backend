@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from db.initDB import initDB, initIndex
 from handler import *
+import processbar
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -98,13 +99,23 @@ def mro():
         message=msg
     )
 
-# @app.route('/percent', methods=['GET'])
-# def percent():
-#     table = request.args.get('table')
-#     p = handle_percent(table)
-#     return jsonify(
-#         percent=p
-#     )
+@app.route('/processbar', methods=['GET'])
+def percent():
+    table = request.args.get('table')
+    p = processbar.row
+
+    if table == 'config':
+        p /= 5505
+    elif table == 'kpi':
+        p /= 970
+    elif table == 'prb':
+        p /= 93025
+    elif table == 'mro':
+        p /= 875605
+
+    return jsonify(
+        percent= p * 100
+    )
 
 @app.route('/cell', methods=['GET'])
 def cell_query():

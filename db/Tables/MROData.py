@@ -1,4 +1,5 @@
 import os
+import processbar
 
 class MROData:
 
@@ -18,6 +19,7 @@ class MROData:
 
         itemList = []
         cnt = 0
+        processbar.row = 0
 
         def _isOK(item):
             if item[5] not in ['37900', '38098', '38400', '38496', '38544', '38950', '39148']:
@@ -40,6 +42,7 @@ class MROData:
                 if cnt == size:
                     _insertAll()
                     itemList.clear()
+                    processbar.row += size
                     cnt = 0
                 dataList = content.rstrip().split(",")
                 timeStamp = dataList[0]
@@ -56,6 +59,7 @@ class MROData:
             if cnt != 0:
                 _insertAll()
                 itemList.clear()
+
 
         print("mrodata finished!")
         return 0, ""

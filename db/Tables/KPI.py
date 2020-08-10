@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import processbar
 
 class KPI:
     def createTrig(self, cursor):
@@ -9,6 +10,7 @@ class KPI:
 
     def loadFromExcel(self, cursor, size, filePath):
         cnt = 1
+        processbar.row = cnt
         while True:
             df = pd.read_excel(filePath,
                header=None,
@@ -37,16 +39,14 @@ class KPI:
                 # fill in the nil by default value 0
                 df = df.replace("NIL", 0.0)
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
-                print(df['timestamp'])
 
                 # insert
                 script = 'INSERT INTO kpi VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
                 cursor.executemany(script, df.values.tolist())
                 cursor.commit()
-                if df.shape[0] < size:
-                    break
-                else:
-                    cnt += size
+
+                cnt += size
+                processbar.row = cnt
 
         print("kpi finished!")
         return 0, ""

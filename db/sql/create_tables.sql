@@ -228,7 +228,7 @@ CREATE TABLE users
 )
 CREATE TABLE kpi
 (
-    time_stamp VARCHAR(50),
+    time_stamp DATE,
     enb_name NVARCHAR(50),
     sector_name NVARCHAR(50),
     rrc_conn_succ_rate FLOAT,

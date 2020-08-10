@@ -4,10 +4,19 @@ from db.Tables.PRB import PRB
 from db.Tables.MROData import MROData
 import pyodbc as odbc
 import pandas as pd
+import os
 from sqlalchemy import create_engine
 from scipy.stats import norm
 
-con = create_engine("mssql+pyodbc://sa:67258012@sbq")
+con = create_engine("mssql+pyodbc://zwt:240017@TDLTE")
+total_tbcell_rows = 5505
+current_tbcell_rows = 0
+total_tbkpi_rows = 970
+current_tbkpi_rows = 0
+total_tbprb_rows = 93025
+current_tbprb_rows = 0
+total_tbmro_rows = 875605
+current_tbmro_rows = 0
 
 def handle_register(account, authentication, cursor):
     cursor.execute('SELECT account FROM users WHERE account=?', account)
@@ -46,6 +55,23 @@ def handle_prb(path, cursor):
     prb = PRB()
     code, msg = prb.loadFromExcel(cursor, 5000, path)
 
+    script = """
+                    SELECT enb_name,sector_name
+                    ,dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0) as [time_stamp]"""
+    script2 = """
+                    from prb
+                    group by enb_name,sector_name,dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0)
+                    order by dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0)
+                    """
+    for i in range(100):
+        script += """
+                    ,AVG( convert(int,prb{0})) as prb{1}""".format(i, i)
+    script += script2
+
+    df = pd.read_sql(script, con)
+    df.to_sql('prbnew', con, if_exists='replace', index=False)
+    df.to_excel(path.replace('\表13 优化区17日-19日每PRB干扰 查询-15分钟.xlsx', '') + '/' + 'PRBnew.xlsx', index=False)
+
     return code, msg
 
 def handle_mro(path, cursor):
@@ -56,10 +82,12 @@ def handle_mro(path, cursor):
 
 def handle_export(tb_name, format, path):
     df = pd.read_sql(tb_name, con)
+    if not os.path.exists(path):
+        return 1, "path wrong"
     if format == 'excel':
         df.to_excel(path + '/' + tb_name + '.xlsx')
     elif format == 'txt':
-        fd = open(path + '\\tb_name' + '.txt', 'w')
+        fd = open(path + '\\' + tb_name + '.txt', 'w')
         fd.write(df.to_string())
         fd.close()
 
@@ -70,7 +98,7 @@ def handle_c2i_analysis():
     SELECT serving_sector, interfering_sector, AVG(lte_sc_rsrp-lte_nc_rsrp)mean, STDEV(lte_sc_rsrp-lte_nc_rsrp)std
     FROM mrodata 
     GROUP BY serving_sector, interfering_sector
-    HAVING COUNT(lte_sc_rsrp-lte_nc_rsrp) > 1""", con)
+    HAVING COUNT(lte_sc_rsrp) > 20""", con)
 
     df['p_under9'] = norm.cdf((9 - df['mean']) / df['std'])
     df['p_between6'] = norm.cdf((6 - df['mean']) / df['std']) - norm.cdf((-6 - df['mean']) / df['std'])
@@ -94,7 +122,8 @@ def drop_duplication(data):
     return data
 
 def handle_overlay_analysis(x):
-    script = "SELECT serving_sector as ss, interfering_sector as ins FROM c2inew WHERE p_between6 > " + str(x / 100)
+    print(x)
+    script = "SELECT serving_sector as ss, interfering_sector as ins FROM c2inew WHERE p_between6 > " + str(x)
     df = pd.read_sql(script, con)
     df = drop_duplication(df)
 
@@ -117,8 +146,8 @@ def handle_overlay_analysis(x):
             result = result.append({'sector1': sector1, 'sector2': sector2, 'sector3': sector3}, ignore_index=True)
 
     result.to_sql('c2i3', con, if_exists='replace', index=False)
-    print(result.to_dict())
-    return 0, "", result.to_dict()
+    print(result.to_dict(orient='index'))
+    return 0, "", result.to_dict(orient='index')
 
 
 def handle_cell(sector_id=None, sector_name=None):
@@ -128,13 +157,15 @@ def handle_cell(sector_id=None, sector_name=None):
              res: tuple or dict of query result
     """
     res = {}
+    print(sector_id, sector_name)
     if sector_id is not None:
-        script = """SELECT * FROM cell WHERE sectorid = '{0}'""".format(sector_id)
+        script = """SELECT * FROM cell WHERE sector_id = '{0}'""".format(sector_id)
     elif sector_name is not None:
         script = """SELECT * FROM cell WHERE sector_name = '{0}'""".format(sector_name)
     else:
         return 1, "Both cell_id and cell_name are None", res
 
+    print(script)
     res = pd.read_sql(script, con).to_dict(orient='index')
     if res == {} :
         return 1, "No result! Check whether the cell_id or cell_name is right.", res
@@ -144,57 +175,39 @@ def handle_cell(sector_id=None, sector_name=None):
 def handle_enodeb(enodeb_id=None, enodeb_name=None):
     res = {}
     if enodeb_id is not None:
-        script = """SELECT * FROM cell WHERE enodebid = '{0}'""".format(enodeb_id)
+        script = "SELECT * FROM enodeb WHERE enodeb_id = '" + enodeb_id + "'"
     elif enodeb_name is not None:
-        script = """SELECT * FROM cell WHERE enodeb_name = '{0}'""".format(enodeb_name)
+        script = "SELECT * FROM enodeb WHERE enodeb_name = '" + enodeb_name + "'"
     else:
         return 1, "Both enodeb_id and enodeb_name are None", res
 
     res = pd.read_sql(script, con).to_dict(orient='index')
+    print(script)
     if res == {}:
         return 1, "No result! Check whether enodeb_id or enodeb_name is right.", res
     return 0, "", res
 
 
-def handle_kpi_query(sector_name, start_time, end_time, props):
+def handle_kpi_query(sector_name, start_time, end_time, prop):
     msg = "No result! Check whether the data is imported."
     script = """
         SELECT time_stamp, {0} 
         FROM kpi 
         WHERE sector_name = '{1}' 
         AND time_stamp BETWEEN '{2}' AND '{3}'
-        """.format(props, sector_name, start_time, end_time)
+        """.format(prop, sector_name, start_time, end_time)
 
     print(script)
     df = pd.read_sql(script, con)
-    return 0, msg, df.to_dict()
+    return 0, msg, df.to_dict(orient='list')
 
-
-def handle_prb_stat(dst_path):
-    script = """
-                SELECT enb_name,sector_name
-                ,dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0) as [time_stamp]"""
-    script2 = """
-                from prb
-                group by enb_name,sector_name,dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0)
-                order by dateadd(HOUR, datediff(HOUR, 0, time_stamp ), 0)
-                """
-    for i in range(100):
-        script += """
-                ,AVG( convert(int,prb{0})) as prb{1}""".format(i, i)
-    script += script2
-
-    df = pd.read_sql(script, con)
-    df.to_sql('prbnew', con, if_exists='replace',index=False)
-    df.to_excel(dst_path + '/' + 'PRBnew.xlsx', index=False)
-    return 0, ""
 
 def handle_prb_query(sector_name, start_time, end_time, granularity, prb_no):
     """
-    granularity: if by minutes 0, else 1
+    granularity: if by minutes '0', else 1
     """
     msg = "No result! Check whether the data is imported."
-    if granularity == 0:
+    if granularity == '0':
         table_name = 'prb'
     else:
         table_name = 'prbnew'
@@ -204,5 +217,6 @@ def handle_prb_query(sector_name, start_time, end_time, granularity, prb_no):
         WHERE sector_name = '{2}' 
         AND time_stamp BETWEEN '{3}' AND '{4}'
         """.format(prb_no, table_name, sector_name, start_time, end_time)
+    print(script)
     df = pd.read_sql(script, con)
-    return 0, msg, df.to_dict()
+    return 0, msg, df.to_dict(orient='list')

@@ -5,7 +5,7 @@ BEGIN
 IF EXISTS(SELECT enb_name FROM inserted)
     DECLARE cur CURSOR forward_only FOR select * FROM inserted
     OPEN cur
-    DECLARE @time_stamp NVARCHAR(10)
+    DECLARE @time_stamp DATE
     DECLARE @enb_name NVARCHAR(50)
     DECLARE @sector_name VARCHAR(50)
     DECLARE @rrc_conn_succ_rate FLOAT

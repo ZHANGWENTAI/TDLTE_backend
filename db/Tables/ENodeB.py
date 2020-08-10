@@ -10,7 +10,7 @@ class ENodeB:
 
     def loadData(self, cursor, size, filePath):
         if os.path.splitext(filePath)[-1] in ['.xlsx', '.xls', '.xlsx/', '.xls/']:
-            cnt = 1
+            cnt = 0
             while True:
                 df = pd.read_excel(filePath,
                                    header=None,

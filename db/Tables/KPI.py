@@ -36,7 +36,8 @@ class KPI:
             else:
                 # fill in the nil by default value 0
                 df = df.replace("NIL", 0.0)
-                df['timestamp'] = df['timestamp'].str.replace(' 00:00:00', '')
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                print(df['timestamp'])
 
                 # insert
                 script = 'INSERT INTO kpi VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'

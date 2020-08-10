@@ -98,6 +98,14 @@ def mro():
         message=msg
     )
 
+# @app.route('/percent', methods=['GET'])
+# def percent():
+#     table = request.args.get('table')
+#     p = handle_percent(table)
+#     return jsonify(
+#         percent=p
+#     )
+
 @app.route('/cell', methods=['GET'])
 def cell_query():
     cell_id = request.args.get('cell_id')
@@ -109,7 +117,7 @@ def cell_query():
     return jsonify(
         status=code,
         message=msg,
-        data=info,
+        result=info,
     )
 
 @app.route('/enodeb', methods=['GET'])
@@ -121,7 +129,7 @@ def enodeb_query():
     return jsonify(
         status=code,
         message=msg,
-        data=info,
+        result=info,
     )
 
 @app.route('/kpi', methods=['GET'])
@@ -129,14 +137,14 @@ def kpi_query():
     sector_name = request.args.get('sector_name')
     start_time = request.args.get('from')
     end_time = request.args.get('to')
-    props = request.args.get('props')
+    prop = request.args.get('prop')
 
-    code, msg, info = handle_kpi_query(sector_name, start_time, end_time, props)
+    code, msg, info = handle_kpi_query(sector_name, start_time, end_time, prop)
 
     return jsonify(
         status=code,
         message=msg,
-        data=info,
+        result=info,
     )
 
 @app.route('/prb_stat', methods=['POST'])
@@ -154,14 +162,14 @@ def prb_query():
     start_time = request.args.get('from')
     end_time = request.args.get('to')
     granularity = request.args.get('granularity')
-    props = request.args.get('props')
+    prop = request.args.get('prop')
 
-    code, msg, info = handle_prb_query(sector_name, start_time, end_time, granularity, props)
+    code, msg, info = handle_prb_query(sector_name, start_time, end_time, granularity, prop)
 
     return jsonify(
         status=code,
         message=msg,
-        data=info,
+        result=info,
     )
 
 @app.route('/export', methods=['POST'])
@@ -180,7 +188,7 @@ def c2i_analysis():
     return jsonify(
         status=code,
         message=msg,
-        data=info
+        result=info
     )
 
 @app.route('/overlay_analysis', methods=['POST'])
@@ -190,5 +198,5 @@ def overlay_analysis():
     return jsonify(
         status=code,
         message=msg,
-        data=triple
+        result=triple
     )

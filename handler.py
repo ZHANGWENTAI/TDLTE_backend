@@ -96,6 +96,11 @@ def handle_c2i_analysis():
     df['p_under9'] = norm.cdf((9 - df['mean']) / df['std'])
     df['p_between6'] = norm.cdf((6 - df['mean']) / df['std']) - norm.cdf((-6 - df['mean']) / df['std'])
 
+    df['p_under9'] = df['p_under9'].values.round(2)
+    df['p_between6'] = df['p_between6'].values.round(2)
+    df['mean'] = df['mean'].values.round(2)
+    df['std'] = df['std'].values.round(2)
+
     df.to_sql('c2inew', con, if_exists='replace', index=False)
     return 0, "", df.to_dict(orient='index')
 
